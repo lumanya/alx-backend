@@ -1,0 +1,58 @@
+#!/usr/bin/python3
+""" LFUCache module
+"""
+BaseCaching = __import__('base_caching').BaseCaching
+
+class LFUCache(BaseCaching):
+    """ LFUCache inherits from BaseCaching and is a caching system
+    """
+
+    def __init__(self):
+        """ Initialize
+        """
+        super().__init__()
+        self.frequency = {}
+        self.min_frequency = 0
+
+    def update_frequency(self, key):
+        """ Update frequency of the key
+        """
+        if key in self.frequency:
+            self.frequency[key] += 1
+        else:
+            self.frequency[key] = 1
+
+    def get_least_frequency(self):
+        """ Get the least frequency used item(s)
+        """
+        min_freq_keys = [key for key in self.cache_data\
+                         if self.frequency[key] == self.min_frequency]
+        if len(min_freq_keys) > 1:
+            least_recently_used = min(self.cache_data, \
+                                      key=lambda k: self.frequency[k])
+            return least_recently_used
+        else:
+            return min_freq_keys[0]
+
+    def put(self, key, item):
+        """ Add an item in the cache
+        """
+        if key is not None and item is not None:
+            self.cache_data[key] = item
+            self.update_frequency(key)
+
+            if len(self.cache_data) > self.MAX_ITEMS:
+                discard_key = self.get_least_frequency()
+                del self.cache_data[discard_key]
+                del self.frequency[discard_key]
+                print(f"DISCARD: {discard_key}")
+
+                self.min_frequency = 1
+
+    def get(self, key):
+        """ Get an item by key
+        """
+        if key is not None and key in self.cache_data:
+            self.update_frequency(key)
+            return self.cache_data[key]
+        return None
